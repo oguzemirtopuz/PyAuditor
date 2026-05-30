@@ -586,9 +586,9 @@ class PyAuditorApp:
         )
         self._ai_btn.pack(fill="x", padx=10, pady=(0, 8))
 
-        # Progress bar
+        # Progress bar (hidden by default)
         self._progress = ttk.Progressbar(parent, mode="indeterminate")
-        self._progress.pack(fill="x", padx=10, pady=(0, 8))
+        # Do not pack here, we pack when scanning starts
 
     def _build_right_panel(self, parent):
         # Summary counters
@@ -792,6 +792,7 @@ class PyAuditorApp:
         enabled_ids = {rid for rid, var in self._rule_vars.items() if var.get()}
 
         self._scan_btn.configure(state="disabled", text="⏳  Scanning…")
+        self._progress.pack(fill="x", padx=10, pady=(0, 8))
         self._progress.start(12)
         self._status_lbl.configure(text="Scanning…")
         self._clear_results()
@@ -812,6 +813,7 @@ class PyAuditorApp:
     def _on_scan_done(self, result: ScanResult, paths: list[str]):
         self._scan_result = result
         self._progress.stop()
+        self._progress.pack_forget()
         self._scan_btn.configure(state="normal", text="▶  SCAN")
         self._ai_btn.configure(state="normal")
 

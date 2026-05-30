@@ -2,13 +2,13 @@
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
 [![Static Analysis](https://img.shields.io/badge/Static_Analysis-AST_Based-FF6F00?style=for-the-badge&logo=scrutinizer-ci&logoColor=white)](#)
-[![AI Powered](https://img.shields.io/badge/AI_Audit-Gemini_2.0_Flash-8E75C2?style=for-the-badge&logo=google-gemini&logoColor=white)](https://aistudio.google.com)
+[![BYOAI](https://img.shields.io/badge/AI_Audit-Bring_Your_Own_AI-8E75C2?style=for-the-badge&logo=openai&logoColor=white)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Extra_Dependencies-Zero_(stdlib_only)-brightgreen?style=for-the-badge)](#)
 
 > **Stop guessing. Start knowing. Every bug. Every risk. Every fix — before you ship.**
 
-**PyAuditor** is a standalone desktop application that performs deep, two-layer analysis of any Python codebase. It combines **25-rule AST-based static analysis** with **Google Gemini AI logical reasoning** to surface not just what will crash — but what *will go wrong*, and *why*, and *exactly how to fix it*.
+**PyAuditor** is a standalone desktop application that performs deep, two-layer analysis of any Python codebase. It combines **25-rule AST-based static analysis** with an innovative **"Bring Your Own AI" (BYOAI)** prompt generator to surface not just what will crash — but what *will go wrong*, and *why*, and *exactly how to fix it*.
 
 Built for developers who demand zero ambiguity in their code quality.
 
@@ -19,8 +19,8 @@ Built for developers who demand zero ambiguity in their code quality.
 ### ⚡ Layer 1 — Static Scan (Instant, Offline)
 Parses every `.py` file into an Abstract Syntax Tree and runs 25 specialised rules. No code is executed. Results in under 2 seconds for thousands of lines.
 
-### 🤖 Layer 2 — AI Audit (Powered by Gemini 2.0 Flash)
-Sends each file to Google's Gemini API to detect **logical errors** that no static rule can find:
+### 🤖 Layer 2 — AI Prompt Generator (Bring Your Own AI)
+Generates an optimised, context-rich prompt wrapping your codebase. Paste it into ChatGPT, Claude 3.5, or Gemini to detect **logical errors** that no static rule can find, without worrying about API limits or privacy:
 - Wrong comparison operator (`>` when `<` was intended)
 - Wrong variable used (`width * width` instead of `width * height`)
 - Logic contradicting comments/docstrings
@@ -56,7 +56,7 @@ Every single finding includes:
 - **Python 3.11+** (uses `str | None` union syntax)
 - **Windows / macOS / Linux** — pure `tkinter`, no platform lock-in
 - **No third-party packages required** for static analysis
-- For AI Audit: a free [Google AI Studio](https://aistudio.google.com/app/apikey) API key
+- **No API Keys needed** — Use your favorite LLM via the web interface
 
 ---
 
@@ -77,11 +77,12 @@ python auditor_app.py
 
 That's it. No `pip install`. No virtual environment. No setup.py.
 
-### 3. (Optional) Enable AI Audit
+### 3. (Optional) Run an AI Audit
 
-1. Get a **free** API key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-2. Click **⚙ Settings** in PyAuditor
-3. Paste the key into the **Gemini API Key** field → Save
+1. Select the files you want to analyze in the UI
+2. Click **📋 COPY AI PROMPT**
+3. Paste the copied prompt into **ChatGPT**, **Claude**, or **Gemini**
+4. The AI will instantly return a structured report of any logical errors!
 
 ---
 
@@ -94,7 +95,7 @@ PyAuditor/
 │   ├── __init__.py
 │   ├── finding.py          # Finding dataclass (level, detail, risk, fix)
 │   ├── scanner.py          # File discovery + AST parsing + rule runner
-│   ├── ai_audit.py         # Gemini 2.0 Flash integration
+│   ├── ai_prompt.py        # BYOAI Prompt Generator
 │   └── rules/
 │       ├── __init__.py     # Rule registry (ALL_RULES)
 │       ├── base.py         # Abstract Rule base class
@@ -104,7 +105,6 @@ PyAuditor/
 │       ├── design.py       # Long functions, nesting, type hints, docstrings
 │       └── potential.py    # Magic numbers, hardcoded paths, TODO/FIXME
 ├── history/                # Auto-saved scan history (JSON)
-└── settings.json           # Auto-created on first run
 ```
 
 ---
@@ -169,19 +169,12 @@ PyAuditor/
 
 ---
 
-## 🔑 Getting a Free Gemini API Key
+## 🔑 Bring Your Own AI (BYOAI) Advantage
 
-1. Go to [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
-2. Sign in with a Google account
-3. Click **"Create API Key"**
-4. Copy and paste into **⚙ Settings → Gemini API Key**
-
-**Free tier limits (as of 2026):**
-- 15 requests/minute
-- 1,000,000 tokens/minute  
-- 1,500 requests/day
-
-PyAuditor automatically spaces requests 4 seconds apart to stay within limits.
+Why we removed direct API integration:
+- **No API Limits/Rate Limiting:** You don't have to wait or pay for API credits.
+- **Privacy First:** You manually control which code goes to the AI.
+- **Model Freedom:** Want to use Claude 3.5 Sonnet for its coding excellence? Or ChatGPT for its reasoning? Just paste the prompt. The generated system prompt strictly coerces *any* modern LLM to reply in the exact PyAuditor JSON format.
 
 ---
 
@@ -210,7 +203,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-*Built with Python's `ast` module, `tkinter`, and Google Gemini AI.*  
+*Built with Python's `ast` module and `tkinter`.*  
 *No third-party packages required for core functionality.*
 
 **If PyAuditor helped you ship cleaner code, consider giving it a ⭐**
