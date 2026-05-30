@@ -127,7 +127,7 @@ PyAuditor/
 | Rule ID | What it detects |
 |---------|----------------|
 | `asyncio_lock_race` | `asyncio.Lock` lazy-init race condition |
-| `blocking_in_async` | `time.sleep` / `requests.get` / `locale.setlocale` inside `async def` |
+| `blocking_in_async` | `time.sleep` / `requests.get` inside `async def` *(Smart AST: ignores `run_in_executor` scopes)* |
 | `missing_await` | Coroutine called without `await` — silently does nothing |
 | `syntax_error` | File cannot be parsed by Python |
 
