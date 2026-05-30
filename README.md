@@ -8,7 +8,7 @@
 [![Zero Dependencies](https://img.shields.io/badge/Extra_Dependencies-Zero_(stdlib_only)-brightgreen?style=for-the-badge)](#)
 
 > **Stop guessing. Start knowing. Every bug. Every risk. Every fix — before you ship.**
-> *See [CHANGELOG.md](CHANGELOG.md) for full version history.*
+> *🎉 Latest Release: **[v1.2.0]** — See [CHANGELOG.md](CHANGELOG.md) for full version history.*
 
 **PyAuditor** is a standalone desktop application that performs deep, two-layer analysis of any Python codebase. It combines **25-rule AST-based static analysis** with an innovative **"Bring Your Own AI" (BYOAI)** prompt generator to surface not just what will crash — but what *will go wrong*, and *why*, and *exactly how to fix it*.
 
