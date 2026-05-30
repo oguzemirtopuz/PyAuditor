@@ -197,8 +197,9 @@ def run_update():
     # ─── STEP 1: Internet and GitHub Connection Check ───
     print_step(1, total_steps, "Checking GitHub link...")
     try:
+        # We test the main repo page instead of the API to avoid rate limits (HTTP 403)
         test_req = urllib.request.Request(
-            f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}",
+            f"https://github.com/{GITHUB_USER}/{GITHUB_REPO}",
             headers={"User-Agent": "PyAuditor-Updater/1.0"}
         )
         test_resp = urllib.request.urlopen(test_req, timeout=10)
