@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from engine.scanner import Scanner, ScanResult, collect_python_files
 from engine.finding import Finding, LEVEL_COLORS
 from engine.rules import ALL_RULES, CATEGORIES
-from engine.ai_audit import analyze_files as ai_analyze_files
+from engine.ai_prompt import generate_ai_prompt
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 APP_DIR      = Path(__file__).parent
@@ -40,7 +40,6 @@ DEFAULT_SETTINGS = {
     "editor": "vscode",          # vscode | system | custom
     "custom_editor_cmd": "",     # e.g. "notepad++.exe {file}:{line}"
     "theme": "dark",
-    "gemini_api_key": "",        # Google AI Studio free API key
 }
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
@@ -163,11 +162,10 @@ class InfoDialog(tk.Toplevel):
                 "   25 specialised rules over this map to find bugs, anti-patterns\n"
                 "   and dangerous code without ever executing the code.\n"
                 "   This is instant — thousands of lines in under 2 seconds.\n\n"
-                "2. AI AUDIT  (🤖 AI AUDIT button)\n"
-                "   Sends each file to Google Gemini (gemini-2.0-flash) and asks\n"
-                "   it to reason about the logic of the code. This catches errors\n"
-                "   that rules cannot: wrong conditions, wrong variables, wrong\n"
-                "   algorithms, etc. Takes ~5 seconds per file."
+                "2. COPY AI PROMPT  (📋 Copy AI Prompt button)\n"
+                "   Generates an optimised prompt containing your code and strict\n"
+                "   instructions to find logical errors. You paste it into ChatGPT/Claude\n"
+                "   to catch errors rules cannot: wrong conditions, wrong algorithms, etc."
             ),
         },
         {
@@ -235,7 +233,7 @@ class InfoDialog(tk.Toplevel):
             "title": "🟣  LOGIC  (AI-detected)",
             "color": LVL_COLOR["LOGIC"],
             "body": (
-                "Found by Gemini AI. The code runs and produces a result, but the\n"
+                "Found by an AI assistant. The code runs and produces a result, but the\n"
                 "result is WRONG because the logic is incorrect.\n\n"
                 "Examples (things no static rule can detect):\n"
                 "  • if x > threshold: → should be < threshold. Program accepts\n"
@@ -260,10 +258,10 @@ class InfoDialog(tk.Toplevel):
                 "     Fix     — exact instruction to solve it\n"
                 "4. Double-click a finding to open that file in your editor.\n"
                 "5. Click '📋 Copy for AI' to copy one finding and paste to an AI assistant.\n"
-                "6. Click '🤖 AI AUDIT' for deep logical analysis (needs Gemini API key).\n"
+                "6. Click '📋 Copy AI Prompt' and paste it to ChatGPT/Claude for logic analysis.\n"
                 "7. Click '📄 Save TXT Report' to save the full report to a text file.\n\n"
                 "Tip: Run SCAN first (it's instant), fix CRITICAL and WARNING issues,\n"
-                "then run AI AUDIT on the cleaned-up code for best results."
+                "then use the AI Prompt on the cleaned-up code for best results."
             ),
         },
     ]
@@ -384,31 +382,6 @@ class SettingsDialog(tk.Toplevel):
         self._custom_entry.pack(anchor="w", pady=2, ipady=4)
         self._on_editor_change()
 
-        # ── Gemini AI Audit ────────────────────────────────────────────────
-        ai_frm = tk.Frame(self, bg=BG_PANEL, pady=10, padx=14)
-        ai_frm.pack(fill="x", padx=14, pady=(0, 8))
-
-        tk.Label(ai_frm, text="🤖  AI Audit — Gemini API Key",
-                 fg=LVL_COLOR["LOGIC"], bg=BG_PANEL,
-                 font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        tk.Label(ai_frm,
-                 text=("Get a FREE key at: aistudio.google.com/app/apikey\n"
-                       "Model used: gemini-2.0-flash  (smart + generous free quota)"),
-                 fg=TEXT_DIM, bg=BG_PANEL,
-                 font=("Segoe UI", 9), justify="left").pack(anchor="w", pady=(2, 4))
-
-        key_row = tk.Frame(ai_frm, bg=BG_PANEL)
-        key_row.pack(fill="x")
-        self._key_entry = tk.Entry(key_row, bg=BG_INPUT, fg=TEXT_MAIN,
-                                   insertbackground=TEXT_MAIN, relief="flat",
-                                   font=("Consolas", 10), width=40, show="*")
-        self._key_entry.insert(0, settings["gemini_api_key"])
-        self._key_entry.pack(side="left", ipady=4)
-        tk.Button(key_row, text="Show", bg=BG_CARD, fg=TEXT_DIM,
-                  relief="flat", font=("Segoe UI", 8),
-                  command=self._toggle_key_vis, padx=6).pack(side="left", padx=(4, 0))
-        self._key_visible = False
-
         # Buttons
         btn_frame = tk.Frame(self, bg=BG_MAIN)
         btn_frame.pack(fill="x", padx=14, pady=10)
@@ -419,18 +392,12 @@ class SettingsDialog(tk.Toplevel):
                   font=("Segoe UI", 10), padx=16, pady=6,
                   cursor="hand2", command=self.destroy).pack(side="right", padx=(0, 6))
 
-    def _toggle_key_vis(self):
-        self._key_visible = not self._key_visible
-        self._key_entry.configure(show="" if self._key_visible else "*")
-
     def _on_editor_change(self):
         state = "normal" if self._editor_var.get() == "custom" else "disabled"
         self._custom_entry.configure(state=state)
 
     def _save(self):
         self.settings["editor"] = self._editor_var.get()
-        self.settings["custom_editor_cmd"] = self._custom_entry.get()
-        self.settings["gemini_api_key"] = self._key_entry.get().strip()
         self.settings.save()
         self.destroy()
 
@@ -611,11 +578,11 @@ class PyAuditorApp:
 
         # AI Audit button
         self._ai_btn = tk.Button(
-            parent, text="🤖  AI AUDIT  (Logical Errors)",
+            parent, text="📋  COPY AI PROMPT",
             bg="#2D1454", fg=LVL_COLOR["LOGIC"],
             relief="flat", cursor="hand2",
             font=("Segoe UI", 10, "bold"),
-            command=self._start_ai_audit, pady=7
+            command=self._start_ai_audit, pady=10
         )
         self._ai_btn.pack(fill="x", padx=10, pady=(0, 8))
 
@@ -868,17 +835,7 @@ class PyAuditorApp:
         paths = list(self._target_listbox.get(0, "end"))
         if not paths:
             messagebox.showwarning("No Targets",
-                                   "Add at least one folder or file before running AI Audit.")
-            return
-
-        api_key = self.settings["gemini_api_key"]
-        if not api_key:
-            messagebox.showwarning(
-                "No API Key",
-                "Please enter your Gemini API key in Settings first.\n\n"
-                "Get a FREE key at: aistudio.google.com/app/apikey"
-            )
-            self._open_settings()
+                                   "Add at least one folder or file before generating a prompt.")
             return
 
         from engine.scanner import collect_python_files
@@ -887,66 +844,20 @@ class PyAuditorApp:
             messagebox.showwarning("No Files", "No Python files found in the selected targets.")
             return
 
-        # Warn about time
-        n = len(file_paths)
-        est_sec = n * 5
-        est_min = max(1, est_sec // 60)
-        ans = messagebox.askyesno(
-            "AI Audit",
-            f"AI Audit will send {n} files to Gemini one by one.\n"
-            f"Estimated time: ~{est_min} minute(s) ({n} × ~5s per file).\n\n"
-            "The app will remain responsive. Continue?"
-        )
-        if not ans:
+        prompt = generate_ai_prompt(file_paths)
+        if not prompt:
+            messagebox.showerror("Error", "Could not read the selected files.")
             return
 
-        self._ai_btn.configure(state="disabled", text="🤖  AI Auditing…")
-        self._scan_btn.configure(state="disabled")
-        self._progress.start(12)
-        self._status_lbl.configure(text=f"AI Audit: 0/{n} files sent to Gemini…")
-
-        def _worker():
-            findings, errors = ai_analyze_files(
-                api_key, file_paths,
-                progress_cb=lambda fp, i, t, s: self.root.after(
-                    0, lambda fp=fp, i=i, t=t, s=s:
-                    self._on_ai_progress(fp, i, t, s)
-                )
-            )
-            self.root.after(0, lambda: self._on_ai_done(findings, errors, file_paths))
-
-        threading.Thread(target=_worker, daemon=True).start()
-
-    def _on_ai_progress(self, fp: str, idx: int, total: int, status: str):
-        name = Path(fp).name
-        self._status_lbl.configure(
-            text=f"AI Audit ({idx}/{total}): {name} — {status}")
-
-    def _on_ai_done(self, findings: list[Finding], errors: list[str],
-                    file_paths: list[str]):
-        self._progress.stop()
-        self._ai_btn.configure(state="normal",
-                               text="🤖  AI AUDIT  (Logical Errors)")
-        self._scan_btn.configure(state="normal")
-
-        self._ai_findings = findings
-        # Merge with static findings (keep static results if any)
-        static = self._scan_result.findings if self._scan_result else []
-        self._all_findings = list(static) + findings
-        self._populate_tree(self._all_findings)
-
-        counts = (self._scan_result.counts if self._scan_result
-                  else {"CRITICAL": 0, "WARNING": 0, "POTENTIAL": 0, "INFO": 0})
-        counts = dict(counts)
-        counts["LOGIC"] = len(findings)
-        self._update_counters(counts)
-
-        msg = f"AI Audit complete — {len(findings)} logical issue(s) found in {len(file_paths)} files."
-        if errors:
-            msg += f"\n\nWarnings ({len(errors)}):\n" + "\n".join(errors[:5])
-        self._status_lbl.configure(text=msg.split("\n")[0])
-        if errors:
-            messagebox.showwarning("AI Audit Warnings", "\n".join(errors[:8]))
+        self.root.clipboard_clear()
+        self.root.clipboard_append(prompt)
+        
+        n = len(file_paths)
+        messagebox.showinfo(
+            "Prompt Copied!", 
+            f"AI Prompt for {n} file(s) copied to clipboard!\n\n"
+            "Paste this directly into ChatGPT (GPT-4o), Claude 3.5 Sonnet, or Gemini 1.5 Pro to get a deep logical audit."
+        )
 
     def _populate_tree(self, findings: list[Finding]):
         self._tree.delete(*self._tree.get_children())
