@@ -1,5 +1,6 @@
 # 🔬 PyAuditor — Universal Python Code Auditor
 
+[![Latest Release](https://img.shields.io/github/v/release/oguzemirtopuz/PyAuditor?style=for-the-badge&color=00c8ff&label=LATEST%20RELEASE)](https://github.com/oguzemirtopuz/PyAuditor/releases/latest)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
 [![Static Analysis](https://img.shields.io/badge/Static_Analysis-AST_Based-FF6F00?style=for-the-badge&logo=scrutinizer-ci&logoColor=white)](#)
 [![BYOAI](https://img.shields.io/badge/AI_Audit-Bring_Your_Own_AI-8E75C2?style=for-the-badge&logo=openai&logoColor=white)](#)
@@ -7,6 +8,7 @@
 [![Zero Dependencies](https://img.shields.io/badge/Extra_Dependencies-Zero_(stdlib_only)-brightgreen?style=for-the-badge)](#)
 
 > **Stop guessing. Start knowing. Every bug. Every risk. Every fix — before you ship.**
+> *See [CHANGELOG.md](CHANGELOG.md) for full version history.*
 
 **PyAuditor** is a standalone desktop application that performs deep, two-layer analysis of any Python codebase. It combines **25-rule AST-based static analysis** with an innovative **"Bring Your Own AI" (BYOAI)** prompt generator to surface not just what will crash — but what *will go wrong*, and *why*, and *exactly how to fix it*.
 
