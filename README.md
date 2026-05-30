@@ -49,6 +49,8 @@ Every single finding includes:
 
 > *Static scan + AI audit results shown side by side in the dark-mode interface.*
 
+*(Upload your screenshot here: `![PyAuditor Screenshot](https://github.com/oguzemirtopuz/PyAuditor/raw/main/assets/screenshot.png)`)*
+
 ---
 
 ## 📋 Requirements
@@ -83,6 +85,16 @@ That's it. No `pip install`. No virtual environment. No setup.py.
 2. Click **📋 COPY AI PROMPT**
 3. Paste the copied prompt into **ChatGPT**, **Claude**, or **Gemini**
 4. The AI will instantly return a structured report of any logical errors!
+
+### 4. Auto-Updating
+
+Whenever a new version of PyAuditor is released, you don't need to re-download or use `git pull`. Simply run:
+
+```bash
+python update.py
+```
+
+This will automatically securely download the latest version, backup your existing files, and apply the update while protecting your local settings and history.
 
 ---
 
