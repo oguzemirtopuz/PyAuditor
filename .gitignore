@@ -1,0 +1,21 @@
+# History files (auto-generated, should not be tracked)
+history/
+*.json
+!engine/**/*.json
+
+# Settings (contains personal API keys)
+settings.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
