@@ -16,6 +16,18 @@ Built for developers who demand zero ambiguity in their code quality.
 
 ---
 
+## ✨ Latest Enhancements (v1.2.0)
+
+> [!IMPORTANT]  
+> **Smart AST Engine & Zero False Positives**
+
+- **[Engine] Smart AST Scoping:** The `blocking_in_async` rule now natively understands deep scoping. It seamlessly ignores synchronous calls safely wrapped inside nested local functions or `lambda` blocks, drastically reducing false positives for heavy `run_in_executor` operations.
+- **[Optimization] Rule Polish:** Enhanced general Abstract Syntax Tree recursive visitors for deeper, more reliable detection without sacrificing our sub-second scanning speed.
+
+*(For a full list of past version histories including v1.0.0, refer to the [CHANGELOG.md](CHANGELOG.md) file.)*
+
+---
+
 ## ✨ Two Layers of Analysis
 
 ### ⚡ Layer 1 — Static Scan (Instant, Offline)
