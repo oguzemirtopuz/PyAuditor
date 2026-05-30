@@ -51,80 +51,42 @@ class AsyncioLockRaceRule(Rule):
 class BlockingInAsyncRule(Rule):
     rule_id  = "blocking_in_async"
     category = "Async"
-    BLOCKING_CALLS = {
-        "locale.setlocale":         "Freezes the event loop while changing locale — all other coroutines stall.",
-        "time.sleep":              "Synchronous sleep blocks the entire event loop thread.",
-        "requests.get":            "`requests` is a synchronous HTTP library — blocks all async tasks.",
-        "requests.post":           "`requests` is a synchronous HTTP library — blocks all async tasks.",
-        "urllib.request.urlopen":  "Synchronous URL fetch — blocks the event loop.",
-        "subprocess.run":          "Synchronous subprocess — blocks the event loop.",
-        "subprocess.call":         "Synchronous subprocess — blocks the event loop.",
-        "open":                    "Synchronous file I/O inside async function — consider `aiofiles`.",
-    }
+    BLOCKING = [
+        ("locale.setlocale",         "Freezes the event loop while changing locale — all other coroutines stall."),
+        ("time.sleep(",              "Synchronous sleep blocks the entire event loop thread."),
+        ("requests.get(",            "`requests` is a synchronous HTTP library — blocks all async tasks."),
+        ("requests.post(",           "`requests` is a synchronous HTTP library — blocks all async tasks."),
+        ("urllib.request.urlopen(",  "Synchronous URL fetch — blocks the event loop."),
+        ("subprocess.run(",          "Synchronous subprocess — blocks the event loop."),
+        ("subprocess.call(",         "Synchronous subprocess — blocks the event loop."),
+        ("open(",                    "Synchronous file I/O inside async function — consider `aiofiles`."),
+    ]
 
     def check(self, path, lines, tree) -> list[Finding]:
         if tree is None:
             return []
-            
         results = []
-        rule_instance = self
-        
-        class AsyncBlockingVisitor(ast.NodeVisitor):
-            def __init__(self):
-                self.current_async_func = None
-
-            def visit_AsyncFunctionDef(self, node):
-                old_func = self.current_async_func
-                self.current_async_func = node
-                self.generic_visit(node)
-                self.current_async_func = old_func
-
-            def visit_FunctionDef(self, node):
-                pass  # Do not traverse into nested standard defs (used for executors)
-
-            def visit_Lambda(self, node):
-                pass  # Do not traverse into lambdas
-
-            def visit_ClassDef(self, node):
-                pass  # Do not traverse into nested classes
-
-            def visit_Call(self, node):
-                if self.current_async_func is not None:
-                    call_name = self._get_full_call_name(node.func)
-                    if call_name in rule_instance.BLOCKING_CALLS:
-                        why = rule_instance.BLOCKING_CALLS[call_name]
-                        func_name = self.current_async_func.name
-                        results.append(rule_instance._make(
-                            "CRITICAL", path, node.lineno,
-                            f"Blocking Call `{call_name}()` Inside `async def {func_name}()`",
-                            f"`{call_name}()` is a synchronous (blocking) call used directly inside "
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.AsyncFunctionDef):
+                continue
+            body_lines = lines[node.lineno - 1: node.end_lineno]
+            for rel_i, line in enumerate(body_lines, node.lineno):
+                stripped = line.strip()
+                if stripped.startswith("#"):
+                    continue
+                for call, why in self.BLOCKING:
+                    if call in stripped:
+                        results.append(self._make(
+                            "CRITICAL", path, rel_i,
+                            f"Blocking Call `{call.rstrip('(')}()` Inside `async def {node.name}()`",
+                            f"`{call.rstrip('(')}` is a synchronous (blocking) call used directly inside "
                             f"an `async def` function. {why}",
                             "The entire asyncio event loop freezes for the duration of this call. All "
                             "other coroutines (voice input, GUI updates, watchdog timers) are frozen too. "
                             "On slow machines or network calls this can cause seconds-long hangs.",
-                            f"Move `{call_name}(...)` out of `{func_name}()` into `__init__`, OR "
-                            f"wrap it: `await asyncio.get_running_loop().run_in_executor(None, lambda: {call_name}(...))`."
+                            f"Move `{call.rstrip('(')}(...)` out of `{node.name}()` into `__init__`, OR "
+                            f"wrap it: `await asyncio.get_running_loop().run_in_executor(None, lambda: {call.rstrip('(')}(...))`."
                         ))
-                self.generic_visit(node)
-
-            def _get_full_call_name(self, func_node):
-                if isinstance(func_node, ast.Name):
-                    return func_node.id
-                elif isinstance(func_node, ast.Attribute):
-                    parts = []
-                    curr = func_node
-                    while isinstance(curr, ast.Attribute):
-                        parts.append(curr.attr)
-                        curr = curr.value
-                    if isinstance(curr, ast.Name):
-                        parts.append(curr.id)
-                    else:
-                        return None
-                    return ".".join(reversed(parts))
-                return None
-
-        visitor = AsyncBlockingVisitor()
-        visitor.visit(tree)
         return results
 
 
