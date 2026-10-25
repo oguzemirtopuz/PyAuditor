@@ -1,153 +1,129 @@
-# 🔬 PyAuditor — Universal Python Code Auditor
+<div align="center">
 
-[![Latest Release](https://img.shields.io/github/v/release/oguzemirtopuz/PyAuditor?style=for-the-badge&color=00c8ff&label=LATEST%20RELEASE&cache=1)](https://github.com/oguzemirtopuz/PyAuditor/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/oguzemirtopuz/PyAuditor?style=for-the-badge&color=00c8ff&label=LATEST%20RELEASE)](https://github.com/oguzemirtopuz/PyAuditor/releases/latest)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
-[![Static Analysis](https://img.shields.io/badge/Static_Analysis-AST_Based-FF6F00?style=for-the-badge&logo=scrutinizer-ci&logoColor=white)](#)
-[![BYOAI](https://img.shields.io/badge/AI_Audit-Bring_Your_Own_AI-8E75C2?style=for-the-badge&logo=openai&logoColor=white)](#)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero_(stdlib_only)-brightgreen?style=for-the-badge)](#)
+[![Static Analysis](https://img.shields.io/badge/Static_Analysis-25_AST_Rules-FF6F00?style=for-the-badge)](#)
+[![BYOAI](https://img.shields.io/badge/AI_Audit-Bring_Your_Own_AI-8E75C2?style=for-the-badge)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Zero Dependencies](https://img.shields.io/badge/Extra_Dependencies-Zero_(stdlib_only)-brightgreen?style=for-the-badge)](#)
 
-> **Stop guessing. Start knowing. Every bug. Every risk. Every fix — before you ship.**
-> *🎉 Latest Release: **[v1.2.0]** — See [CHANGELOG.md](CHANGELOG.md) for full version history.*
+<h1>🔬 PyAuditor</h1>
+<h3>No pip install. No API keys. Paste it in and see every bug you're about to ship.</h3>
 
-**PyAuditor** is a standalone desktop application that performs deep, two-layer analysis of any Python codebase. It combines **25-rule AST-based static analysis** with an innovative **"Bring Your Own AI" (BYOAI)** prompt generator to surface not just what will crash — but what *will go wrong*, and *why*, and *exactly how to fix it*.
+<p><em>25-rule AST static analysis · BYOAI prompt generator · Sub-2-second scans · Zero configuration</em></p>
 
-Built for developers who demand zero ambiguity in their code quality.
+</div>
 
----
-
-## ✨ Latest Enhancements (v1.2.0)
-
-> [!IMPORTANT]  
-> **Smart AST Engine & Zero False Positives**
-
-- **[Engine] Smart AST Scoping:** The `blocking_in_async` rule now natively understands deep scoping. It seamlessly ignores synchronous calls safely wrapped inside nested local functions or `lambda` blocks, drastically reducing false positives for heavy `run_in_executor` operations.
-- **[Optimization] Rule Polish:** Enhanced general Abstract Syntax Tree recursive visitors for deeper, more reliable detection without sacrificing our sub-second scanning speed.
-
-*(For a full list of past version histories including v1.0.0, refer to the [CHANGELOG.md](CHANGELOG.md) file.)*
+<div align="center">
+  <img src="preview.gif" alt="Project Preview" width="100%" />
+</div>
 
 ---
 
-## ✨ Two Layers of Analysis
+## 🎯 What Problem Does This Solve?
 
-### ⚡ Layer 1 — Static Scan (Instant, Offline)
-Parses every `.py` file into an Abstract Syntax Tree and runs 25 specialised rules. No code is executed. Results in under 2 seconds for thousands of lines.
+Python has a dark side: it runs broken code silently.
 
-### 🤖 Layer 2 — AI Prompt Generator (Bring Your Own AI)
-Generates an optimised, context-rich prompt wrapping your codebase. Paste it into ChatGPT, Claude 3.5, or Gemini to detect **logical errors** that no static rule can find, without worrying about API limits or privacy:
-- Wrong comparison operator (`>` when `<` was intended)
-- Wrong variable used (`width * width` instead of `width * height`)
-- Logic contradicting comments/docstrings
-- Off-by-one errors, wrong algorithms, missing edge cases
+A coroutine called without `await` does absolutely nothing — no error, no warning. An `except: pass` block swallows every exception, including `KeyboardInterrupt`. A `mutable_default_arg` like `def f(x=[])` shares state across every call. Your code ships, runs in production, and quietly fails.
+
+Standard linters catch style issues. Type checkers catch type mismatches. **But no standard tool catches the category of bugs that are syntactically valid, pass all tests, and still produce wrong behavior at runtime.**
+
+**PyAuditor** runs two analysis passes to surface these:
+
+1. **Layer 1 — Static Scan (Instant, Offline):** 25 specialized AST rules scan every `.py` file with no code executed. Results in under 2 seconds for thousands of lines.
+2. **Layer 2 — BYOAI Prompt Generator:** Generates an optimized, context-rich prompt wrapping your code. Paste it into ChatGPT, Claude, or Gemini to detect logical errors that no static rule can find — without API limits or privacy concerns.
+
+---
+
+## 👥 Who This Is For
+
+- **Python developers** who want a fast, honest pre-commit code review
+- **Teams** who need a portable, zero-setup audit tool that works on any machine
+- **Students and learners** who want to understand exactly what their code does wrong and why
+- **CI pipeline builders** who want a foundation for automated code quality gates
+- **Anyone** who has shipped a bug that no linter caught
+
+---
+
+## 🔥 Problems It Solves
+
+| The Bug Category | What PyAuditor Detects |
+|---|---|
+| Silent async failures | Coroutine called without `await` — does nothing, no error |
+| Deadlock setup | `asyncio.Lock` lazy-init race condition |
+| Blocking async | `time.sleep()` or `requests.get()` inside `async def` |
+| Swallowed errors | `except: pass` — the error disappears silently |
+| Shared mutable state | `def f(x=[])` — all calls share the same list |
+| Shadowed builtins | Variable named `list`, `dict`, `str` — you've overwritten Python |
+| Dead parameters | Declared but never used in the function body |
+| Unused class state | `self.x` set in `__init__` but never read anywhere |
+| Logic errors | Off-by-one, wrong algorithm, wrong variable — caught by the AI layer |
+
+---
+
+## ⚡ Key Benefits
+
+- **Zero friction:** No `pip install`, no virtual environment, no config files. Just run `python auditor_app.py`.
+- **Complete findings:** Every detected issue includes Detail (what's wrong), Risk (what breaks at runtime), and Fix (exact instruction to resolve it).
+- **Private by design:** The BYOAI model means you control what code goes to the AI — no silent API calls.
+- **Model agnostic:** The generated prompt is engineered to produce structured JSON output from any modern LLM (ChatGPT, Claude, Gemini, Llama).
+- **Cross-platform:** Pure `tkinter` — runs on Windows, macOS, and Linux with no platform lock-in.
+- **Self-updating:** `python update.py` downloads the latest release, backs up your files, and applies the update automatically.
 
 ---
 
 ## 🎯 Severity Levels
 
-| Level | Colour | Meaning |
-|-------|--------|---------|
+| Level | Color | Meaning |
+|---|---|---|
 | 🔴 **CRITICAL** | Red | Will crash or produce fatal failure at runtime |
-| 🟡 **WARNING** | Yellow | Runs but does the *wrong* thing silently |
+| 🟡 **WARNING** | Yellow | Runs but does the *wrong thing* silently |
 | 🟠 **POTENTIAL** | Orange | Works today — time-bomb for the future |
-| 🔵 **INFO** | Blue | Code quality & maintainability suggestions |
-| 🟣 **LOGIC** | Purple | AI-detected logical errors (wrong behaviour, no crash) |
-
-Every single finding includes:
-- **Detail** — exactly what is technically wrong
-- **Risk** — what happens at runtime if ignored (concrete scenario)
-- **Fix** — exact, actionable instruction to resolve it
+| 🔵 **INFO** | Blue | Code quality and maintainability suggestions |
+| 🟣 **LOGIC** | Purple | AI-detected logical errors (wrong behavior, no crash) |
 
 ---
 
-## 🖥️ Screenshots
-
-> *Static scan + AI audit results shown side by side in the dark-mode interface.*
-
-*(Upload your screenshot here: `![PyAuditor Screenshot](https://github.com/oguzemirtopuz/PyAuditor/raw/main/assets/screenshot.png)`)*
-
----
-
-## 📋 Requirements
-
-- **Python 3.11+** (uses `str | None` union syntax)
-- **Windows / macOS / Linux** — pure `tkinter`, no platform lock-in
-- **No third-party packages required** for static analysis
-- **No API Keys needed** — Use your favorite LLM via the web interface
-
----
-
-## 🚀 Installation & Usage
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/oguzemirtopuz/PyAuditor.git
-cd PyAuditor
-```
-
-### 2. Run the application
-
-```bash
-python auditor_app.py
-```
-
-That's it. No `pip install`. No virtual environment. No setup.py.
-
-### 3. (Optional) Run an AI Audit
-
-1. Select the files you want to analyze in the UI
-2. Click **📋 COPY AI PROMPT**
-3. Paste the copied prompt into **ChatGPT**, **Claude**, or **Gemini**
-4. The AI will instantly return a structured report of any logical errors!
-
-### 4. Auto-Updating
-
-Whenever a new version of PyAuditor is released, you don't need to re-download or use `git pull`. Simply run:
-
-```bash
-python update.py
-```
-
-This will automatically securely download the latest version, backup your existing files, and apply the update while protecting your local settings and history.
-
----
-
-## 📁 Project Structure
+## 🛠️ Technical Architecture
 
 ```
 PyAuditor/
-├── auditor_app.py          # Main application — launch this
+├── auditor_app.py          # Main application — tkinter dark-mode GUI
+│
 ├── engine/
-│   ├── __init__.py
-│   ├── finding.py          # Finding dataclass (level, detail, risk, fix)
 │   ├── scanner.py          # File discovery + AST parsing + rule runner
+│   ├── finding.py          # Finding dataclass: level, detail, risk, fix
 │   ├── ai_prompt.py        # BYOAI Prompt Generator
 │   └── rules/
-│       ├── __init__.py     # Rule registry (ALL_RULES)
 │       ├── base.py         # Abstract Rule base class
-│       ├── async_rules.py  # asyncio / concurrency rules
-│       ├── safety_rules.py # Exception handling, mutable defaults, os._exit
-│       ├── dead_code.py    # Unused params, attrs, imports, widgets
-│       ├── design.py       # Long functions, nesting, type hints, docstrings
-│       └── potential.py    # Magic numbers, hardcoded paths, TODO/FIXME
-├── history/                # Auto-saved scan history (JSON)
+│       ├── async_rules.py  # asyncio / concurrency rules (4 rules)
+│       ├── safety_rules.py # Exception handling, mutable defaults (9 rules)
+│       ├── dead_code.py    # Unused params, attrs, imports, widgets (6 rules)
+│       ├── design.py       # Long functions, nesting, type hints (4 rules)
+│       └── potential.py    # Magic numbers, paths, TODOs (7 rules + custom)
+│
+└── history/                # Auto-saved scan history (JSON, for trend tracking)
 ```
+
+**How the AST Engine Works:**
+
+PyAuditor parses every `.py` file into Python's built-in Abstract Syntax Tree. Each of the 25 rules is a visitor that traverses the tree looking for specific node patterns — no code is executed at any point. The `blocking_in_async` rule uses **Smart AST Scoping** to ignore synchronous calls safely wrapped inside `run_in_executor` patterns, eliminating false positives for heavy async workloads.
 
 ---
 
-## 🛠️ Rule Catalogue (25 Static Rules)
+## 📋 Rule Catalogue (25 Static Rules)
 
 ### 🔴 Critical — Async & Concurrency
-| Rule ID | What it detects |
-|---------|----------------|
+| Rule ID | What It Detects |
+|---|---|
 | `asyncio_lock_race` | `asyncio.Lock` lazy-init race condition |
 | `blocking_in_async` | `time.sleep` / `requests.get` inside `async def` *(Smart AST: ignores `run_in_executor` scopes)* |
 | `missing_await` | Coroutine called without `await` — silently does nothing |
 | `syntax_error` | File cannot be parsed by Python |
 
 ### 🟡 Warning — Safety
-| Rule ID | What it detects |
-|---------|----------------|
+| Rule ID | What It Detects |
+|---|---|
 | `bare_except` | `except:` catches `SystemExit` and `KeyboardInterrupt` |
 | `except_pass` | `except: pass` — error silently swallowed |
 | `mutable_default_arg` | `def f(x=[])` — shared mutable default |
@@ -159,8 +135,8 @@ PyAuditor/
 | `duplicate_list_items` | Duplicate constants in a list literal |
 
 ### 🟠 Potential — Future Risks
-| Rule ID | What it detects |
-|---------|----------------|
+| Rule ID | What It Detects |
+|---|---|
 | `magic_number` | Unexplained numeric literal in comparisons/assignments |
 | `todo_fixme` | `TODO` / `FIXME` / `HACK` / `BUG` comments |
 | `hardcoded_path` | Absolute filesystem path (`C:\...`, `/home/...`) |
@@ -170,8 +146,8 @@ PyAuditor/
 | `stale_log_value` | Log message references a threshold not present in code |
 
 ### 🔵 Info — Design & Quality
-| Rule ID | What it detects |
-|---------|----------------|
+| Rule ID | What It Detects |
+|---|---|
 | `long_function` | Function longer than 80 lines |
 | `deep_nesting` | 4+ levels of `if`/`for`/`while` nesting |
 | `missing_type_hint` | Public function missing parameter or return type |
@@ -181,36 +157,85 @@ PyAuditor/
 
 ---
 
-## ⚙️ Key Features
+## 🔑 Why BYOAI Instead of Direct API Integration
 
-- **Dark-mode GUI** — professional dark theme with colour-coded severity rows
-- **Interactive detail panel** — click any finding to see full Detail / Risk / Fix
-- **Filter by severity** — show only CRITICAL, or only LOGIC, etc.
-- **Copy for AI** — one click copies a finding in AI-ready format for Claude/Gemini/GPT
-- **Open in Editor** — double-click any finding to jump to that exact line in VS Code, or any custom editor
-- **Save TXT Report** — export the full report as a portable text file
-- **Scan history** — each scan is saved; trend indicator shows improvement vs. last run
-- **Rule toggles** — enable/disable individual rules or whole categories
-- **Zero-config** — works on any Python project, no configuration files needed
+| Traditional Approach | PyAuditor BYOAI |
+|---|---|
+| API rate limits hit during large projects | No limits — use your existing session |
+| API costs accumulate | Your existing subscription, no extra cost |
+| Code silently sent to a third party | You manually control what goes to the AI |
+| Locked to one AI model | Use Claude, ChatGPT, Gemini, Llama — your choice |
+
+The generated system prompt is structured to coerce any modern LLM to respond in PyAuditor's exact JSON schema — consistent, parseable output regardless of which model you use.
 
 ---
 
-## 🔑 Bring Your Own AI (BYOAI) Advantage
+## 🚀 Installation & Usage
 
-Why we removed direct API integration:
-- **No API Limits/Rate Limiting:** You don't have to wait or pay for API credits.
-- **Privacy First:** You manually control which code goes to the AI.
-- **Model Freedom:** Want to use Claude 3.5 Sonnet for its coding excellence? Or ChatGPT for its reasoning? Just paste the prompt. The generated system prompt strictly coerces *any* modern LLM to reply in the exact PyAuditor JSON format.
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/oguzemirtopuz/PyAuditor.git
+cd PyAuditor
+```
+
+### 2. Run the Application
+
+```bash
+python auditor_app.py
+```
+
+No `pip install`. No virtual environment. No setup.py. That's it.
+
+### 3. Run an AI Audit (Optional)
+
+1. Select the files you want to analyze in the UI
+2. Click **📋 COPY AI PROMPT**
+3. Paste into **ChatGPT**, **Claude**, or **Gemini**
+4. Receive a structured report of logical errors
+
+### 4. Auto-Update
+
+```bash
+python update.py
+```
+
+Downloads the latest version, backs up your current files, and applies the update — preserving your local settings and scan history.
+
+---
+
+## ⚙️ GUI Features
+
+- **Dark-mode interface** — color-coded severity rows with professional dark theme
+- **Interactive detail panel** — click any finding to see full Detail / Risk / Fix
+- **Filter by severity** — show only CRITICAL, or only LOGIC, etc.
+- **Copy for AI** — one click copies any finding in AI-ready format
+- **Open in Editor** — double-click any finding to jump to that exact line in VS Code
+- **Save TXT Report** — export the full audit as a portable text file
+- **Scan history** — trend indicator shows improvement vs. last run
+- **Rule toggles** — enable/disable individual rules or whole categories
+- **Zero-config** — works on any Python project structure
 
 ---
 
 ## 🗺️ Roadmap
 
 - [ ] JavaScript / TypeScript support (Tree-Sitter based)
-- [ ] Severity threshold configuration (e.g. fail CI if CRITICAL > 0)
+- [ ] Severity threshold configuration (fail CI if CRITICAL > 0)
 - [ ] GitHub Actions integration
 - [ ] Diff mode — show only *new* findings vs. previous scan
 - [ ] Export to JSON / HTML report
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome. Priority areas:
+
+- New AST rule implementations (especially for common Django/Flask patterns)
+- JavaScript/TypeScript scanner backend
+- GitHub Actions YAML template
+- Additional BYOAI prompt strategies for specific domains
 
 ---
 
@@ -220,18 +245,8 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 👤 Author
-
-**Oğuz Emir Topuz**  
-[github.com/oguzemirtopuz](https://github.com/oguzemirtopuz)
-
----
-
 <div align="center">
-
-*Built with Python's `ast` module and `tkinter`.*  
-*No third-party packages required for core functionality.*
-
-**If PyAuditor helped you ship cleaner code, consider giving it a ⭐**
-
+  <sub>Built by <a href="https://github.com/oguzemirtopuz">Oğuz Emir Topuz</a></sub>
+  <br/>
+  <sub>⭐ If PyAuditor caught a bug before it shipped, give it a star.</sub>
 </div>
